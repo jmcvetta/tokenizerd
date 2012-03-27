@@ -31,8 +31,9 @@ type newTokenRequest struct {
 }
 
 type tokenizedText struct {
-	Text  string // The original text
-	Token string // A token representing, but not programmatically derived from, the original text
+	Fieldname string // Name of the field from which this text came
+	Text      string // The original text
+	Token     string // A token representing, but not programmatically derived from, the original text
 }
 
 type Tokenizer struct {
@@ -49,9 +50,9 @@ func (t Tokenizer) run() {
 	}
 }
 
-func (t *Tokenizer) tokenCollection(fieldname string) *mgo.Collection {
+func (t *Tokenizer) tokenCollection() *mgo.Collection {
 	// lightweight operation, involves no network communication
-	col := t.session.DB("tokens").C(fieldname)
+	col := t.session.DB("gokenizer").C("tokens")
 	return col
 }
 
@@ -73,11 +74,14 @@ func (t *Tokenizer) newToken(req newTokenRequest) {
 	var token string
 	var count int
 	var err error
-	col := t.tokenCollection(req.fieldname)
+	col := t.tokenCollection()
 	for {
 		token = t.proposeToken()
 		// Make sure this token does not already exist
-		count, err = col.Find(bson.M{"token": token}).Count()
+		count, err = col.Find(bson.M{
+			"fieldname": req.fieldname,
+			"token":     token,
+		}).Count()
 		if err != nil {
 			panic(err)
 		}
@@ -88,7 +92,7 @@ func (t *Tokenizer) newToken(req newTokenRequest) {
 		break
 	}
 	// No one else is using this token, so let's save it to db
-	err = col.Insert(&tokenizedText{req.text, token})
+	err = col.Insert(&tokenizedText{req.fieldname, req.text, token})
 	if err != nil {
 		panic(err)
 	}
@@ -101,9 +105,9 @@ func (t *Tokenizer) GetToken(fieldname string, text string) string {
 	log.Println("Get Token")
 	log.Println("  Fieldname: " + fieldname)
 	log.Println("  Text:      " + text)
-	col := t.tokenCollection(fieldname)
+	col := t.tokenCollection()
 	result := tokenizedText{}
-	err := col.Find(bson.M{"text": text}).One(&result)
+	err := col.Find(bson.M{"fieldname": fieldname, "text": text}).One(&result)
 	var token string
 	switch {
 	default:
@@ -160,6 +164,22 @@ func main() {
 	if err != nil {
 		log.Panic(err)
 	}
+	//
+	// Ensure DB uses indexes.  If indexes already exist, this is a noop.
+	//
+	col := session.DB("gokenizer").C("tokens")
+	col.EnsureIndex(mgo.Index{
+		Key:      []string{"fieldname", "text"},
+		Unique:   true,
+		DropDups: false,
+		Sparse:   true,
+	})
+	col.EnsureIndex(mgo.Index{
+		Key:      []string{"fieldname", "token"},
+		Unique:   true,
+		DropDups: false,
+		Sparse:   true,
+	})
 	//
 	// Initialize tokenizer
 	//
