@@ -157,7 +157,6 @@ func main() {
 	//
 	log.Println("Connecting to MongoDB")
 	session, err := mgo.Dial("localhost")
-	session
 	if err != nil {
 		log.Panic(err)
 	}
