@@ -129,14 +129,14 @@ func (t *Tokenizer) GetToken(fieldname string, text string) string {
 	return token
 }
 
-func (t *Tokenizer) NewHandler() func(*websocket.Conn) {
+func (t *Tokenizer) WebsocketHandler(messageHandler func(t *Tokenizer, message string) string) func(*websocket.Conn) {
 	return func(ws *websocket.Conn) {
 		log.Println("Starting websocket handler.")
 		log.Println("    Local Address: " + ws.LocalAddr().String())
 		log.Println("    Remote Address: " + ws.RemoteAddr().String())
 		for {
-			var text string
-			recv_err := websocket.Message.Receive(ws, &text)
+			var message string
+			recv_err := websocket.Message.Receive(ws, &message)
 			switch {
 			case recv_err != nil && recv_err.Error() == "EOF":
 				log.Println("Websocket disconnecting")
@@ -144,14 +144,19 @@ func (t *Tokenizer) NewHandler() func(*websocket.Conn) {
 			case recv_err != nil:
 				log.Fatalln("Error receiving message from websocket: " + recv_err.Error())
 			}
-			fieldname := "foobar" // TODO: fieldname support not yet implemented
-			token := t.GetToken(fieldname, text)
-			send_err := websocket.Message.Send(ws, token)
+			response := messageHandler(t, message)
+			send_err := websocket.Message.Send(ws, response)
 			if send_err != nil {
 				log.Fatalln("Error sending message to websocket: " + send_err.Error())
 			}
 		}
 	}
+}
+
+func echoToken(t *Tokenizer, message string) string {
+	fieldname := "" 
+	token := t.GetToken(fieldname, message)
+	return token
 }
 
 func main() {
@@ -191,7 +196,7 @@ func main() {
 	//
 	// Initialize websockets
 	//
-	handler := t.NewHandler()
+	handler := t.WebsocketHandler(echoToken)
 	log.Println("Starting websocket listener.\n")
 	http.Handle("/", websocket.Handler(handler))
 	err = http.ListenAndServe(":3000", nil)
