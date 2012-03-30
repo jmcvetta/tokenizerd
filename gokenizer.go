@@ -16,6 +16,7 @@ import (
 	"crypto/rand"
 	"encoding/base64"
 	"encoding/json"
+	"io"
 	"launchpad.net/mgo"
 	"launchpad.net/mgo/bson"
 	"log"
@@ -23,7 +24,7 @@ import (
 	"net/http"
 	"strconv"
 	"time"
-	"io"
+	"errors"
 )
 
 // Maybe these should be more similar to HTTP response codes.
@@ -32,19 +33,40 @@ const (
 	success        = "Success"
 )
 
-type ApiRequest struct {
-	ReqId   string // Request ID string will be returned unchanged with the response to this request
-	Content map[string]string
+var TokenNotFound  = errors.New("Foobar")
+
+type TokenizeRequest struct {
+	ReqId string            // Request ID string will be returned unchanged with the response to this request
+	Data  map[string]string // Maps fieldnames to text
 }
 
-type ApiResponse struct {
-	ReqId   string // Request ID string from orginating ApiRequest
-	Status  string // Status code
-	Error   string // Error message if any
-	Content map[string]string
+type TokenizeReponse struct {
+	ReqId  string            // Request ID string from orginating TokenizeRequest
+	Status string            // Status code
+	Error  string            // Error message if any
+	Data   map[string]string // Maps fieldnames to token strings
 }
 
-type newTokenRequest struct {
+type DetokenizeRequest struct {
+	ReqId string // Request ID string will be returned unchanged with the response to this request
+	Data  map[string]string
+}
+
+type foundToken struct {
+	// Is it really pointful to return the token?
+	Token string // The token we looked up
+	Found bool   // Was the token found in the database?
+	Text  string // The text it represents, if found
+}
+
+type DetokenizeReponse struct {
+	ReqId  string                // Request ID string from orginating TokenizeRequest
+	Status string                // Status code
+	Error  string                // Error message if any
+	Data   map[string]foundToken // Maps fieldnames to foundToken instances
+}
+
+type newTokenizeRequest struct {
 	fieldname string      // Name of the field from which this text came
 	text      string      // The original text
 	replyto   chan string // Channel on which to return tokenized text
@@ -58,7 +80,7 @@ type tokenizedText struct {
 
 type Tokenizer struct {
 	session *mgo.Session
-	reqs    chan newTokenRequest
+	reqs    chan newTokenizeRequest
 }
 
 func (t Tokenizer) run() {
@@ -90,7 +112,7 @@ func (t *Tokenizer) proposeToken() string {
 	return token
 }
 
-func (t *Tokenizer) newToken(req newTokenRequest) {
+func (t *Tokenizer) newToken(req newTokenizeRequest) {
 	var token string
 	var count int
 	var err error
@@ -137,7 +159,7 @@ func (t *Tokenizer) GetToken(fieldname string, text string) string {
 	case err == mgo.NotFound:
 		log.Println("No existing token found.  Requesting a new token.")
 		replychan := make(chan string)
-		req := newTokenRequest{
+		req := newTokenizeRequest{
 			fieldname: fieldname,
 			text:      text,
 			replyto:   replychan,
@@ -146,6 +168,28 @@ func (t *Tokenizer) GetToken(fieldname string, text string) string {
 		token = <-req.replyto
 	}
 	return token
+}
+
+func (t *Tokenizer) GetText(fieldname string, token string) (string, error) {
+	log.Println("Get Text")
+	log.Println("  Fieldname: " + fieldname)
+	log.Println("  Token:      " + token)
+	var text string
+	var err error
+	col := t.tokenCollection()
+	result := tokenizedText{}
+	query := col.Find(bson.M{"fieldname": fieldname, "token": token})
+	switch db_err := query.One(&result); db_err != nil {
+	case db_err == mgo.NotFound:
+		log.Println("Token not found in DB")
+		err = TokenNotFound
+		return text, err
+	default:
+		log.Panic(err)
+	}
+	text = result.Text
+	log.Println("Found text for token: " + text)
+	return text, err
 }
 
 type wsHandler func(ws *websocket.Conn)
@@ -158,7 +202,7 @@ func (t *Tokenizer) EchoHandler() wsHandler {
 		for {
 			var message string
 			var err error
-			err = websocket.Message.Receive(ws, &message) 
+			err = websocket.Message.Receive(ws, &message)
 			switch err != nil {
 			case err == io.EOF:
 				log.Println("Websocket disconnecting")
@@ -176,65 +220,78 @@ func (t *Tokenizer) EchoHandler() wsHandler {
 	}
 }
 
-// A fieldHandler tokenizes or detokenizes a fieldname/text pair
-type apiHandler func(request *ApiRequest, response *ApiResponse)
-
-func (t *Tokenizer) jsonHandler(ws *websocket.Conn, h apiHandler) {
-	dec := json.NewDecoder(ws)
-	enc := json.NewEncoder(ws)
-	for {
-		var request ApiRequest
-		var response ApiResponse
-		// Read one request from the socket and attempt to decode
-		err := dec.Decode(&request)
-		switch {
-		case err == io.EOF:
-			log.Panic(err)
-			log.Println("Websocket disconnecting")
-        	return
-        case err != nil:
-        	// Request could not be decoded - return error
-			response = ApiResponse{Status: invalidRequest, Error: err.Error()}
-			enc.Encode(&response)
-        }
-        // Call API Handler
-        h(&request, &response)
-        /*
-		content := make(map[string]string)
-		for fieldname, text := range request.Content {
-			content[fieldname] = fh(fieldname, text)
-		}
-		response = ApiResponse{
-			ReqId: request.ReqId,
-			Status: success,
-			Content: content,
-		}
-		*/
-		enc.Encode(response)
-	}
-}
-
-func (t *Tokenizer) tokenizeReq(request *ApiRequest, response *ApiResponse) {
-	content := make(map[string]string)
-	for fieldname, text := range request.Content {
-		content[fieldname] = t.GetToken(fieldname, text)
-	}
-	response.ReqId = request.ReqId
-	response.Status = success
-	response.Content = content
-}
-
-
 func (t *Tokenizer) JsonTokenizer() wsHandler {
-	// Is this really the right way to do this?
-	// See:  http://groups.google.com/group/golang-nuts/browse_thread/thread/2d3c573a05f72d69?pli=1
 	return func(ws *websocket.Conn) {
-		t.jsonHandler(ws, func(rq *ApiRequest, rp *ApiResponse) { t.tokenizeReq(rq, rp) } )
+		dec := json.NewDecoder(ws)
+		enc := json.NewEncoder(ws)
+		for {
+			var request TokenizeRequest
+			// Read one request from the socket and attempt to decode
+			err := dec.Decode(&request)
+			switch {
+			case err == io.EOF:
+				log.Println("Websocket disconnecting")
+				return
+			case err != nil:
+				// Request could not be decoded - return error
+				response := TokenizeReponse{Status: invalidRequest, Error: err.Error()}
+				enc.Encode(&response)
+			}
+			content := make(map[string]string)
+			for fieldname, text := range request.Data {
+				content[fieldname] = t.GetToken(fieldname, text)
+			}
+			response := TokenizeReponse{
+				ReqId:  request.ReqId,
+				Status: success,
+				Data:   content,
+			}
+			enc.Encode(response)
+		}
 	}
 }
 
-
-
+func (t *Tokenizer) JsonDetokenizer() wsHandler {
+	return func(ws *websocket.Conn) {
+		dec := json.NewDecoder(ws)
+		enc := json.NewEncoder(ws)
+		for {
+			var request DetokenizeRequest
+			// Read one request from the socket and attempt to decode
+			switch err := dec.Decode(&request); true {
+			case err == io.EOF:
+				log.Println("Websocket disconnecting")
+				return
+			case err != nil:
+				// Request could not be decoded - return error
+				response := DetokenizeReponse{Status: invalidRequest, Error: err.Error()}
+				enc.Encode(&response)
+				continue
+			}
+			data := make(map[string]foundToken)
+			for fieldname, token := range request.Data {
+				ft := foundToken{
+					Token: token,
+				}
+				text, err := t.GetText(fieldname, token)
+				switch err != nil {
+				case err == TokenNotFound:
+					ft.Found = false
+				default:
+					log.Panic(err)
+				}
+				ft.Text = text
+				data[fieldname] = ft
+			}
+			response := DetokenizeReponse{
+				ReqId:  request.ReqId,
+				Status: success,
+				Data:   data,
+			}
+			enc.Encode(response)
+		}
+	}
+}
 func NewTokenizer() Tokenizer {
 	//
 	// Setup database connection
@@ -265,7 +322,7 @@ func NewTokenizer() Tokenizer {
 	//
 	t := Tokenizer{
 		session: session,
-		reqs:    make(chan newTokenRequest),
+		reqs:    make(chan newTokenizeRequest),
 	}
 	go t.run()
 	return t
@@ -284,10 +341,12 @@ func main() {
 	// Initialize websockets
 	//
 	echoHandler := t.EchoHandler()
-	handler := t.JsonTokenizer()
+	jtok := t.JsonTokenizer()
+	jdetok := t.JsonDetokenizer()
 	log.Println("Starting websocket listener.\n")
 	http.Handle("/echo", websocket.Handler(echoHandler))
-	http.Handle("/", websocket.Handler(handler))
+	http.Handle("/v1/tokenize", websocket.Handler(jtok))
+	http.Handle("/v1/detokenize", websocket.Handler(jdetok))
 	err := http.ListenAndServe(":3000", nil)
 	if err != nil {
 		log.Fatalln("ListenAndServe: " + err.Error())
