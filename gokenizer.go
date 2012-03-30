@@ -16,6 +16,7 @@ import (
 	"crypto/rand"
 	"encoding/base64"
 	"encoding/json"
+	"errors"
 	"io"
 	"launchpad.net/mgo"
 	"launchpad.net/mgo/bson"
@@ -24,7 +25,6 @@ import (
 	"net/http"
 	"strconv"
 	"time"
-	"errors"
 )
 
 // Maybe these should be more similar to HTTP response codes.
@@ -33,7 +33,7 @@ const (
 	success        = "Success"
 )
 
-var TokenNotFound  = errors.New("Foobar")
+var TokenNotFound = errors.New("Foobar")
 
 type TokenizeRequest struct {
 	ReqId string            // Request ID string will be returned unchanged with the response to this request
@@ -179,12 +179,12 @@ func (t *Tokenizer) GetText(fieldname string, token string) (string, error) {
 	col := t.tokenCollection()
 	result := tokenizedText{}
 	query := col.Find(bson.M{"fieldname": fieldname, "token": token})
-	switch db_err := query.One(&result); db_err != nil {
+	switch db_err := query.One(&result); true {
 	case db_err == mgo.NotFound:
 		log.Println("Token not found in DB")
 		err = TokenNotFound
 		return text, err
-	default:
+	case db_err != nil:
 		log.Panic(err)
 	}
 	text = result.Text
@@ -227,8 +227,7 @@ func (t *Tokenizer) JsonTokenizer() wsHandler {
 		for {
 			var request TokenizeRequest
 			// Read one request from the socket and attempt to decode
-			err := dec.Decode(&request)
-			switch {
+			switch err := dec.Decode(&request); true {
 			case err == io.EOF:
 				log.Println("Websocket disconnecting")
 				return
@@ -266,7 +265,7 @@ func (t *Tokenizer) JsonDetokenizer() wsHandler {
 				// Request could not be decoded - return error
 				response := DetokenizeReponse{Status: invalidRequest, Error: err.Error()}
 				enc.Encode(&response)
-				continue
+				return
 			}
 			data := make(map[string]foundToken)
 			for fieldname, token := range request.Data {
@@ -281,6 +280,7 @@ func (t *Tokenizer) JsonDetokenizer() wsHandler {
 					log.Panic(err)
 				}
 				ft.Text = text
+				ft.Found = true
 				data[fieldname] = ft
 			}
 			response := DetokenizeReponse{
