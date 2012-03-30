@@ -194,32 +194,6 @@ func (t *Tokenizer) GetText(fieldname string, token string) (string, error) {
 
 type wsHandler func(ws *websocket.Conn)
 
-func (t *Tokenizer) EchoHandler() wsHandler {
-	return func(ws *websocket.Conn) {
-		log.Println("Starting websocket handler.")
-		log.Println("    Local Address: " + ws.LocalAddr().String())
-		log.Println("    Remote Address: " + ws.RemoteAddr().String())
-		for {
-			var message string
-			var err error
-			err = websocket.Message.Receive(ws, &message)
-			switch err != nil {
-			case err == io.EOF:
-				log.Println("Websocket disconnecting")
-				return
-			default:
-				log.Panic(err)
-			}
-			fieldname := ""
-			token := t.GetToken(fieldname, message)
-			err = websocket.Message.Send(ws, token)
-			if err != nil {
-				log.Panic(err)
-			}
-		}
-	}
-}
-
 func (t *Tokenizer) JsonTokenizer() wsHandler {
 	return func(ws *websocket.Conn) {
 		dec := json.NewDecoder(ws)
@@ -328,23 +302,15 @@ func NewTokenizer() Tokenizer {
 	return t
 }
 
-func tokenEcho(t *Tokenizer, message string) string {
-	fieldname := ""
-	token := t.GetToken(fieldname, message)
-	return token
-}
-
 func main() {
 	log.SetFlags(log.Ltime | log.Lshortfile)
 	t := NewTokenizer()
 	//
 	// Initialize websockets
 	//
-	echoHandler := t.EchoHandler()
 	jtok := t.JsonTokenizer()
 	jdetok := t.JsonDetokenizer()
 	log.Println("Starting websocket listener.\n")
-	http.Handle("/echo", websocket.Handler(echoHandler))
 	http.Handle("/v1/tokenize", websocket.Handler(jtok))
 	http.Handle("/v1/detokenize", websocket.Handler(jdetok))
 	err := http.ListenAndServe(":3000", nil)
