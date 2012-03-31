@@ -281,7 +281,7 @@ func (t *Tokenizer) JsonDetokenizer() wsHandler {
 					ft.Found = true
 				case err == TokenNotFound:
 					ft.Found = false
-				err != nil:
+				case err != nil:
 					log.Panic(err)
 				}
 				data[fieldname] = ft
