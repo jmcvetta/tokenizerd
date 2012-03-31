@@ -13,11 +13,13 @@ Gokenizer presents a websocket API for tokenizing and detokenizing arbitrary dat
 
 Connect to Gokenizer with a websocket client.  You can use http://websocket.org/echo to experiment.
 
-Tokenizer: ws://localhost:3000/v1/tokenize
 
-Detokenizer: ws://localhost:3000/v1/detokenize
 
 ### Tokenize
+
+Connect to the websocket:
+
+	ws://localhost:3000/v1/tokenize
 
 Issue a JSON request:
 
@@ -43,7 +45,11 @@ Response:
 
 ### Detokenize
 
-Request:
+Connect to the websocket:
+
+	ws://localhost:3000/v1/detokenize
+
+Issue a JSON request:
 
 	{
 		"ReqId": "foobar",
