@@ -142,7 +142,8 @@ func (t *Tokenizer) newToken(req newTokenizeRequest) {
 		break
 	}
 	// No one else is using this token, so let's save it to db
-	if err := col.Insert(&tokenizedText{req.fieldname, req.text, token}); err != nil {
+	err := col.Insert(&tokenizedText{req.fieldname, req.text, token})
+	if err != nil {
 		panic(err)
 	}
 	log.Println("New token: " + token)
@@ -203,6 +204,10 @@ type wsHandler func(ws *websocket.Conn)
 
 func (t *Tokenizer) JsonTokenizer() wsHandler {
 	return func(ws *websocket.Conn) {
+		log.Println("New websocket connection")
+		log.Println("    Location:  ", ws.Config().Location)
+		log.Println("    Origin:    ", ws.Config().Origin)
+		log.Println("    Protocol:  ", ws.Config().Protocol)
 		dec := json.NewDecoder(ws)
 		enc := json.NewEncoder(ws)
 		for {
@@ -216,6 +221,8 @@ func (t *Tokenizer) JsonTokenizer() wsHandler {
 				// Request could not be decoded - return error
 				response := TokenizeReponse{Status: invalidRequest, Error: err.Error()}
 				enc.Encode(&response)
+				log.Println("Invalid request - websocket disconnecting")
+				return 
 			}
 			content := make(map[string]string)
 			for fieldname, text := range request.Data {
