@@ -1,6 +1,6 @@
 /*
                                    Gokenizer
-                             A Document Tokenizer
+                               A Data Tokenizer
 
 
 @author: Jason McVetta <jason.mcvetta@gmail.com>
@@ -13,7 +13,6 @@ package main
 
 import (
 	"code.google.com/p/go.net/websocket"
-	"crypto/rand"
 	"encoding/base64"
 	"encoding/json"
 	"errors"
@@ -21,7 +20,6 @@ import (
 	"launchpad.net/mgo"
 	"launchpad.net/mgo/bson"
 	"log"
-	"math/big"
 	"net/http"
 	"strconv"
 	"time"
@@ -99,28 +97,38 @@ func (t *Tokenizer) tokenCollection() *mgo.Collection {
 }
 
 func (t *Tokenizer) proposeToken() string {
-	// Create a proposed token value, based on the current timestamp plus a
-	// random integer.  This should *usually* produce unique tokens - however
-	// there is no guarantee of this, so it is necessary to check that the 
-	// token does not already exist.
-	// Proposed token
-	token_int := time.Now().Second()
-	bigrand, _ := rand.Int(rand.Reader, big.NewInt(10000000))
-	token_int += int(bigrand.Int64())
+	// Propose a hopefully-unique token by converting current nanoseconds 
+	// since the epoch into a base64 string.
+	token_int := time.Now().Nanosecond()
 	token := strconv.Itoa(token_int)
 	token = base64.StdEncoding.EncodeToString([]byte(token))
 	return token
 }
 
 func (t *Tokenizer) newToken(req newTokenizeRequest) {
+	// 
+	// First check that a token does not already exist
+	//
 	var token string
-	var count int
-	var err error
 	col := t.tokenCollection()
+	result := tokenizedText{}
+	text := req.text
+	fieldname := req.fieldname
+	switch err := col.Find(bson.M{"fieldname": fieldname, "text": text}).One(&result); true {
+	case nil == err:
+		token = result.Token
+		log.Println("Found existing token: " + token)
+		req.replyto <- token
+		return
+	case err == mgo.NotFound:
+		log.Println("Confirmed no token for '" + text + "'.  Creating new token.")
+	default:
+		log.Panic(err)
+	}
+	// Try randomish tokens til we find one that is not already in use
 	for {
 		token = t.proposeToken()
-		// Make sure this token does not already exist
-		count, err = col.Find(bson.M{
+		count, err := col.Find(bson.M{
 			"fieldname": req.fieldname,
 			"token":     token,
 		}).Count()
@@ -134,8 +142,7 @@ func (t *Tokenizer) newToken(req newTokenizeRequest) {
 		break
 	}
 	// No one else is using this token, so let's save it to db
-	err = col.Insert(&tokenizedText{req.fieldname, req.text, token})
-	if err != nil {
+	if err := col.Insert(&tokenizedText{req.fieldname, req.text, token}); err != nil {
 		panic(err)
 	}
 	log.Println("New token: " + token)
@@ -273,7 +280,7 @@ func NewTokenizer() Tokenizer {
 	log.Println("Connecting to MongoDB")
 	session, err := mgo.Dial("localhost")
 	if err != nil {
-		log.Panic(err)
+		log.Fatalln(err)
 	}
 	//
 	// Ensure DB uses indexes.  If indexes already exist, this is a noop.
