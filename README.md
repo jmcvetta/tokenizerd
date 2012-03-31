@@ -55,7 +55,8 @@ Issue a JSON request:
 		"ReqId": "foobar",
 		"Data": {
 			"field name 2": "OTMyMzgzMDAw",
-			"fieldname1": "OTMwMjkxMDAw"
+			"fieldname1": "OTMwMjkxMDAw",
+			"fieldname 3": "non-existent token string"
 		}
 	}
 
@@ -75,6 +76,11 @@ Response:
 				"Token": "OTMwMjkxMDAw",
 				"Found":true,
 				"Text":"fieldvalue1"
+			},
+			"fieldname 3": {
+				"Token":"non-existent token string",
+				"Found": false,
+				"Text":""
 			}
 		}
 	}
