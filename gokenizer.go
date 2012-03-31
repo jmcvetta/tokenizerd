@@ -236,7 +236,7 @@ func (t *Tokenizer) JsonTokenizer() wsHandler {
 				response := TokenizeReponse{Status: invalidRequest, Error: err.Error()}
 				enc.Encode(&response)
 				log.Println("Invalid request - websocket disconnecting")
-				return 
+				return
 			}
 			content := make(map[string]string)
 			for fieldname, text := range request.Data {
