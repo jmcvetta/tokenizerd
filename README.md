@@ -6,7 +6,10 @@ data, represented as JSON key/value pairs.
 
 ## Installation
 
-	$ go install gokenizer.go
+	cd $YOUR_WORKSPACE
+	git clone git://github.com/jmcvetta/gokenizer.git
+	cd gokenizer
+	go install gokenizer.go
 
 ## Usage
 
