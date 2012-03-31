@@ -275,14 +275,15 @@ func (t *Tokenizer) JsonDetokenizer() wsHandler {
 					Token: token,
 				}
 				text, err := t.GetText(fieldname, token)
-				switch err != nil {
+				switch {
+				case nil == err:
+					ft.Text = text
+					ft.Found = true
 				case err == TokenNotFound:
 					ft.Found = false
-				default:
+				err != nil:
 					log.Panic(err)
 				}
-				ft.Text = text
-				ft.Found = true
 				data[fieldname] = ft
 			}
 			response := DetokenizeReponse{
