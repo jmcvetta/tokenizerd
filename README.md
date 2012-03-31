@@ -1,6 +1,7 @@
 # Gokenizer
 
-Gokenizer presents a websocket API for tokenizing and detokenizing arbitrary data, represented as JSON key/value pairs.
+Gokenizer presents a websocket API for tokenizing and detokenizing arbitrary
+data, represented as JSON key/value pairs.
 
 
 ## Installation
@@ -9,9 +10,18 @@ Gokenizer presents a websocket API for tokenizing and detokenizing arbitrary dat
 
 ## Usage
 
+### Start MongoDB
+
+Gokenizer uses MongoDB as a datastore.  Installation instructions for MongoDB
+can be [found here](http://www.mongodb.org/display/DOCS/Quickstart).
+
+Currently Gokenizer connects to MongoDB on the default port with no security.
+This will be improved in a future version.
+
 ### Connect
 
-Connect to Gokenizer with a websocket client.  You can use http://websocket.org/echo to experiment.
+Connect to Gokenizer with a websocket client.  You can use [Echo
+Test](http://websocket.org/echo.html) to experiment.
 
 
 
