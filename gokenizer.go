@@ -37,6 +37,7 @@ import (
 	"net/http"
 	"strconv"
 	"time"
+	"flag"
 )
 
 // Maybe these should be more similar to HTTP response codes.
@@ -295,15 +296,7 @@ func (t *Tokenizer) JsonDetokenizer() wsHandler {
 		}
 	}
 }
-func NewTokenizer() Tokenizer {
-	//
-	// Setup database connection
-	//
-	log.Println("Connecting to MongoDB")
-	session, err := mgo.Dial("localhost")
-	if err != nil {
-		log.Fatalln(err)
-	}
+func NewTokenizer(session *mgo.Session) Tokenizer {
 	//
 	// Ensure DB uses indexes.  If indexes already exist, this is a noop.
 	//
@@ -333,16 +326,34 @@ func NewTokenizer() Tokenizer {
 
 func main() {
 	log.SetFlags(log.Ltime | log.Lshortfile)
-	t := NewTokenizer()
 	//
-	// Initialize websockets
+	// Parse command line
 	//
+	listenUrl := flag.String("url", "localhost:3000", "Host/port on which to run websocket listener")
+	mongoUrl := flag.String("mongo", "localhost", "URL of MongoDB server")
+	flag.Parse()
+	//
+	// Setup database connection
+	//
+	log.Println("Connecting to MongoDB on", *mongoUrl)
+	session, err := mgo.Dial(*mongoUrl)
+	if err != nil {
+		log.Fatalln(err)
+	}
+	//
+	// Initialize tokenizer
+	//
+	t := NewTokenizer(session)
 	jtok := t.JsonTokenizer()
 	jdetok := t.JsonDetokenizer()
-	log.Println("Starting websocket listener.\n")
+	//
+	// Start websocket listener
+	//
+	log.Println("Starting websocket listener on ", *listenUrl)
 	http.Handle("/v1/tokenize", websocket.Handler(jtok))
 	http.Handle("/v1/detokenize", websocket.Handler(jdetok))
-	err := http.ListenAndServe(":3000", nil)
+	// listenUrl := "heliotropi.cc:3000"
+	err = http.ListenAndServe(*listenUrl, nil)
 	if err != nil {
 		log.Fatalln("ListenAndServe: " + err.Error())
 	}

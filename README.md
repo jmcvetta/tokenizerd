@@ -11,14 +11,14 @@ data, represented as JSON key/value pairs.
 Gokenizer uses MongoDB as a datastore.  Installation instructions for MongoDB
 can be [found here](http://www.mongodb.org/display/DOCS/Quickstart).
 
-Currently Gokenizer connects to MongoDB on the default port with no security.
-This will be improved in a future version.
+Currently Gokenizer connects to MongoDB with no security.  This will be
+improved in a future version.
 
 ### Go Language
 
-A working [Go](http://golang.org) installation is required to compile
-Gokenizer.  See the Go [Getting Started](http://golang.org/doc/install) page
-for complete instructions.
+A working installation of [Go](http://golang.org) version 1 is required to
+compile Gokenizer.  See the Go [Getting Started](http://golang.org/doc/install)
+page for complete instructions.
 
 ### Gokenizer
 
@@ -28,11 +28,20 @@ for complete instructions.
 	# "go install" may require superuser permissions, depending on how Go
 	# is installed on your system.
 	go install gokenizer.go 
-	# Once installed, Gokenizer can be run with the simple command:
-	gokenizer
 
 
 ## Usage
+
+### Run Gokenizer
+
+By default Gokenizer connects to MongoDB on localhost over the default port,
+and listens for websocket connections on ws://localhost:3000.  These can be
+changed with command line flags:
+
+	$ ./gokenizer -help
+	Usage of ./gokenizer:
+	  -mongo="localhost": URL of MongoDB server
+	  -url="localhost:3000": Host/port on which to run websocket listener
 
 ### Connect
 
