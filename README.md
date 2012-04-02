@@ -6,14 +6,7 @@ data, represented as JSON key/value pairs.
 
 ## Installation
 
-	cd $YOUR_WORKSPACE
-	git clone git://github.com/jmcvetta/gokenizer.git
-	cd gokenizer
-	go install gokenizer.go
-
-## Usage
-
-### Start MongoDB
+### MongoDB
 
 Gokenizer uses MongoDB as a datastore.  Installation instructions for MongoDB
 can be [found here](http://www.mongodb.org/display/DOCS/Quickstart).
@@ -21,12 +14,30 @@ can be [found here](http://www.mongodb.org/display/DOCS/Quickstart).
 Currently Gokenizer connects to MongoDB on the default port with no security.
 This will be improved in a future version.
 
+### Go Language
+
+A working [Go](http://golang.org) installation is required to compile
+Gokenizer.  See the Go [Getting Started](http://golang.org/doc/install) page
+for complete instructions.
+
+### Gokenizer
+
+	cd $YOUR_WORKSPACE
+	git clone git://github.com/jmcvetta/gokenizer.git
+	cd gokenizer
+	# "go install" may require superuser permissions, depending on how Go
+	# is installed on your system.
+	go install gokenizer.go 
+	# Once installed, Gokenizer can be run with the simple command:
+	gokenizer
+
+
+## Usage
+
 ### Connect
 
 Connect to Gokenizer with a websocket client.  You can use [Echo
 Test](http://websocket.org/echo.html) to experiment.
-
-
 
 ### Tokenize
 
