@@ -28,29 +28,60 @@ Gokenizer.  If not, see <http://www.gnu.org/licenses/>.
 package main
 
 import (
-	"testing"
 	"code.google.com/p/go.net/websocket"
-	// "encoding/base64"
-	// "encoding/json"
-	// "errors"
-	// "io"
-	// "launchpad.net/mgo"
-	// "launchpad.net/mgo/bson"
-	// "log"
-	// "net/http"
-	// "strconv"
-	// "time"
-	// "flag"
+	"encoding/json"
+	"github.com/jmcvetta/goutil"
+	"testing"
 )
 
+var tokenizeReq = `
+{
+    "ReqId": "an arbitrary string identifying this request",
+    "Data": {
+        "fieldname1": "fieldvalue1",
+        "field name 2": "field  value 2"
+    }
+}
+`
 
-
-func TestTokenize(t *testing.T) {
+func getWebsocket(t *testing.T) *websocket.Conn {
 	origin := "http://localhost/"
 	url := "ws://localhost:3000/v1/tokenize"
-	client, err := websocket.Dial(url, "", origin)
+	ws, err := websocket.Dial(url, "", origin)
 	if err != nil {
 		t.Fatal(err)
 	}
-	println(client, err)
+	return ws
+}
+
+// Tests tokenization 
+func TestRoundTrip(t *testing.T) {
+	var err error
+	//
+	// Prepare some random data
+	//  
+	reqid := goutil.RandString(8, 128)
+	origData := make(map[string]string)
+	for i := 0; i < 10; i++ {
+		fieldname := goutil.RandString(8, 128)
+		field := goutil.RandString(8, 128)
+		origData[fieldname] = field
+	}
+	//
+	// Tokenize
+	//
+	req := TokenizeRequest{
+		ReqId: reqid,
+		Data:  origData,
+	}
+	t.Log("Tokenize request:", req)
+	ws := getWebsocket(t)
+	dec := json.NewDecoder(ws)
+	if _, err = ws.Write([]byte(tokenizeReq)); err != nil {
+		t.Fatal(err)
+	}
+	var resp TokenizeReponse
+	if err = dec.Decode(&resp); err != nil {
+		t.Fatal(err)
+	}
 }
