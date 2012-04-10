@@ -30,6 +30,7 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"errors"
+	"flag"
 	"io"
 	"launchpad.net/mgo"
 	"launchpad.net/mgo/bson"
@@ -37,7 +38,6 @@ import (
 	"net/http"
 	"strconv"
 	"time"
-	"flag"
 )
 
 // Maybe these should be more similar to HTTP response codes.
@@ -217,7 +217,7 @@ func (t *Tokenizer) GetText(fieldname string, token string) (string, error) {
 
 type wsHandler func(ws *websocket.Conn)
 
-func (t *Tokenizer) JsonTokenizer() wsHandler {
+func (t *Tokenizer) HandlerTokenize() wsHandler {
 	return func(ws *websocket.Conn) {
 		log.Println("New websocket connection")
 		log.Println("    Location:  ", ws.Config().Location)
@@ -239,21 +239,22 @@ func (t *Tokenizer) JsonTokenizer() wsHandler {
 				log.Println("Invalid request - websocket disconnecting")
 				return
 			}
-			content := make(map[string]string)
+			data := make(map[string]string)
 			for fieldname, text := range request.Data {
-				content[fieldname] = t.GetToken(fieldname, text)
+				data[fieldname] = t.GetToken(fieldname, text)
 			}
 			response := TokenizeReponse{
 				ReqId:  request.ReqId,
 				Status: success,
-				Data:   content,
+				Data:   data,
 			}
 			enc.Encode(response)
 		}
 	}
 }
 
-func (t *Tokenizer) JsonDetokenizer() wsHandler {
+// A websocket handler for detokenization
+func (t *Tokenizer) HandlerDetokenize() wsHandler {
 	return func(ws *websocket.Conn) {
 		dec := json.NewDecoder(ws)
 		enc := json.NewEncoder(ws)
@@ -296,6 +297,7 @@ func (t *Tokenizer) JsonDetokenizer() wsHandler {
 		}
 	}
 }
+
 func NewTokenizer(session *mgo.Session) Tokenizer {
 	//
 	// Ensure DB uses indexes.  If indexes already exist, this is a noop.
@@ -344,14 +346,14 @@ func main() {
 	// Initialize tokenizer
 	//
 	t := NewTokenizer(session)
-	jtok := t.JsonTokenizer()
-	jdetok := t.JsonDetokenizer()
+	tok := t.HandlerTokenize()
+	detok := t.HandlerDetokenize()
 	//
 	// Start websocket listener
 	//
 	log.Println("Starting websocket listener on ", *listenUrl)
-	http.Handle("/v1/tokenize", websocket.Handler(jtok))
-	http.Handle("/v1/detokenize", websocket.Handler(jdetok))
+	http.Handle("/v1/tokenize", websocket.Handler(tok))
+	http.Handle("/v1/detokenize", websocket.Handler(detok))
 	// listenUrl := "heliotropi.cc:3000"
 	err = http.ListenAndServe(*listenUrl, nil)
 	if err != nil {
