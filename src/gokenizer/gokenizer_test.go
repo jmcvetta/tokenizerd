@@ -1,6 +1,8 @@
 /*
                                    Gokenizer
-Test Suite
+                                  Test Suite
+
+NOTE: Gokenizer application must be running in order to run tests.
 
 
 @author: Jason McVetta <jason.mcvetta@gmail.com>
@@ -32,6 +34,7 @@ import (
 	"encoding/json"
 	"github.com/jmcvetta/goutil"
 	"testing"
+	"log"
 )
 
 var tokenizeReq = `
@@ -49,6 +52,8 @@ func getWebsocket(t *testing.T) *websocket.Conn {
 	url := "ws://localhost:3000/v1/tokenize"
 	ws, err := websocket.Dial(url, "", origin)
 	if err != nil {
+		msg := "Could not conect to websocket.  Is Gokenizer running?"
+		log.Println(msg)
 		t.Fatal(err)
 	}
 	return ws
@@ -60,11 +65,11 @@ func TestRoundTrip(t *testing.T) {
 	//
 	// Prepare some random data
 	//  
-	reqid := goutil.RandString(8, 128)
+	reqid := goutil.RandAlphanumeric(8, 128)
 	origData := make(map[string]string)
 	for i := 0; i < 10; i++ {
-		fieldname := goutil.RandString(8, 128)
-		field := goutil.RandString(8, 128)
+		fieldname := goutil.RandAlphanumeric(8, 128)
+		field := goutil.RandAlphanumeric(8, 128)
 		origData[fieldname] = field
 	}
 	//
@@ -84,4 +89,5 @@ func TestRoundTrip(t *testing.T) {
 	if err = dec.Decode(&resp); err != nil {
 		t.Fatal(err)
 	}
+	log.Println(resp)
 }
