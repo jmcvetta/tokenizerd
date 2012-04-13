@@ -32,8 +32,10 @@ package api
 import (
 	"code.google.com/p/go.net/websocket"
 	"encoding/json"
+	"fmt"
 	"github.com/jmcvetta/goutil"
 	"log"
+	"net/http"
 	"testing"
 )
 
@@ -49,7 +51,7 @@ var tokenizeReq = `
 
 func getWebsocket(t *testing.T) *websocket.Conn {
 	origin := "http://localhost/"
-	url := "ws://localhost:3000/v1/tokenize"
+	url := "ws://localhost:3500/v1/tokenize"
 	ws, err := websocket.Dial(url, "", origin)
 	if err != nil {
 		msg := "Could not conect to websocket.  Is Gokenizer running?"
@@ -59,21 +61,19 @@ func getWebsocket(t *testing.T) *websocket.Conn {
 	return ws
 }
 
-func runServer() error {
+func runServer() {
 	//
 	// Use a fake tokenizer since we are only interested in testing the API.
 	//
 	fake := FakeTokenizer{}
-	tok := HandlerTokenize(fake)
-	detok := HandlerDetokenize(t)
+	tok := WsTokenize(fake)
+	detok := WsDetokenize(fake)
 	//
 	// Start websocket listener
 	//
-	log.Println("Starting websocket listener on ", *listenUrl)
 	http.Handle("/v1/tokenize", websocket.Handler(tok))
 	http.Handle("/v1/detokenize", websocket.Handler(detok))
-	// listenUrl := "heliotropi.cc:3000"
-	err = http.ListenAndServe(":3000", nil)
+	err := http.ListenAndServe(":3500", nil)
 	if err != nil {
 		log.Fatalln("ListenAndServe: " + err.Error())
 	}
@@ -91,10 +91,56 @@ func (f FakeTokenizer) Detokenize(s string) (string, error) {
 	return s, nil
 }
 
-
 func TestTokenizeApi(t *testing.T) {
 }
 
 func TestDetokenizeApi(t *testing.T) {
 }
 
+// Tests tokenization 
+func TestWsTokenize(t *testing.T) {
+	go runServer()
+	var err error
+	//
+	// Prepare some random data
+	//  
+	reqid := goutil.RandAlphanumeric(8, 8)
+	origData := make(map[string]string)
+	for i := 0; i < 10; i++ {
+		fieldname := goutil.RandAlphanumeric(8, 8)
+		field := goutil.RandAlphanumeric(8, 8)
+		origData[fieldname] = field
+	}
+	//
+	// Setup API connection
+	//
+	ws := getWebsocket(t)
+	dec := json.NewDecoder(ws)
+	enc := json.NewEncoder(ws)
+	//
+	// Tokenize
+	//
+	req := JsonTokenizeRequest{
+		ReqId: reqid,
+		Data:  origData,
+	}
+	if err = enc.Encode(req); err != nil {
+		t.Fatal(err)
+	}
+	var resp TokenizeReponse
+	if err = dec.Decode(&resp); err != nil {
+		t.Fatal(err)
+	}
+	// Since the FakeTokenizer returns the original string as the token string,
+	// we can easily check whether the API is properly handling our request.
+	for field, orig := range origData {
+		token := resp.Data[field]
+		if orig != token {
+			msg := fmt.Sprintf("Tokenization failure: %s != %s", orig, token)
+			t.Error(msg)
+		}
+	}
+	//
+	// Detokenize
+	//
+}
