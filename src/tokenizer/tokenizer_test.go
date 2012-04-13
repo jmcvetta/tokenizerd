@@ -49,7 +49,7 @@ func TestRoundTrip(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	tokenizer := NewTokenizer(db)
+	tokenizer := NewMongoTokenizer(db)
 	orig := goutil.RandAlphanumeric(8, 8)
 	token := tokenizer.Tokenize(orig)
 	var detok string // Result of detokenization - should be same as orig
@@ -77,7 +77,7 @@ func BenchmarkRoundTrip(b *testing.B) {
 	if err != nil {
 		b.Error(err)
 	}
-	tokenizer := NewTokenizer(db)
+	tokenizer := NewMongoTokenizer(db)
 	b.StartTimer()
 	for i := 0; i < b.N; i++ {
 		orig := goutil.RandAlphanumeric(8, 8)
