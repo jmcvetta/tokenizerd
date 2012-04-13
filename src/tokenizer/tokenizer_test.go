@@ -44,7 +44,7 @@ func TestRoundTrip(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	db := session.DB("test_tokenizer")
+	db := session.DB("test_gokenizer_tokenizer")
 	err = db.DropDatabase()
 	if err != nil {
 		t.Error(err)
@@ -72,7 +72,7 @@ func BenchmarkRoundTrip(b *testing.B) {
 	if err != nil {
 		b.Error(err)
 	}
-	db := session.DB("test_tokenizer")
+	db := session.DB("test_gokenizer_tokenizer")
 	err = db.DropDatabase()
 	if err != nil {
 		b.Error(err)
