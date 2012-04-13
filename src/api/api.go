@@ -75,7 +75,7 @@ type DetokenizeReponse struct {
 
 type wsHandler func(ws *websocket.Conn)
 
-func HandlerTokenize(t tokenizer.Tokenizer) wsHandler {
+func WsTokenize(t tokenizer.Tokenizer) wsHandler {
 	return func(ws *websocket.Conn) {
 		log.Println("New websocket connection")
 		log.Println("    Location:  ", ws.Config().Location)
@@ -112,7 +112,7 @@ func HandlerTokenize(t tokenizer.Tokenizer) wsHandler {
 }
 
 // A websocket handler for detokenization
-func HandlerDetokenize(t tokenizer.Tokenizer) wsHandler {
+func WsDetokenize(t tokenizer.Tokenizer) wsHandler {
 	return func(ws *websocket.Conn) {
 		dec := json.NewDecoder(ws)
 		enc := json.NewEncoder(ws)

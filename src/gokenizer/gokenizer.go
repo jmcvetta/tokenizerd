@@ -26,13 +26,13 @@ Gokenizer.  If not, see <http://www.gnu.org/licenses/>.
 package main
 
 import (
+	"api"
 	"code.google.com/p/go.net/websocket"
 	"flag"
 	"launchpad.net/mgo"
 	"log"
 	"net/http"
 	"tokenizer"
-	"api"
 )
 
 func main() {
@@ -56,8 +56,8 @@ func main() {
 	// Initialize tokenizer
 	//
 	t := tokenizer.NewMongoTokenizer(db)
-	tok := api.HandlerTokenize(t)
-	detok := api.HandlerDetokenize(t)
+	tok := api.WsTokenize(t)
+	detok := api.WsDetokenize(t)
 	//
 	// Start websocket listener
 	//
