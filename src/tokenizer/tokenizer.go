@@ -57,22 +57,40 @@ type TokenRecord struct {
 	Token string // A token representing, but not programmatically derived from, the original text
 }
 
-// Tokenizer allows you to tokenize and detokenize strings.
-type Tokenizer struct {
+type Tokenizer interface {
+	Tokenize(string) string
+	Detokenize(string) (string, error)
+}
+
+// MongoTokenizer allows you to tokenize and detokenize strings.
+type MongoTokenizer struct {
 	db *mgo.Database
 	// queue   chan OriginalText
 }
 
 // The MongoDB collection object containing our tokens.
-func (t *Tokenizer) collection() *mgo.Collection {
+func (t MongoTokenizer) collection() *mgo.Collection {
 	// lightweight operation, involves no network communication
 	col := t.db.C("tokens")
 	return col
 }
 
+// Fetches the token for string s from the database.
+func (t MongoTokenizer) fetchToken(s string) (string, error) {
+	log.Println("fetchToken:", s)
+	var token string
+	col := t.collection()
+	result := TokenRecord{}
+	err := col.Find(bson.M{"original": s}).One(&result)
+	if err == nil {
+		token = result.Token
+	}
+	return token, err
+}
+
 // Tokenize accepts a string and returns a token string which represents, 
 // but has no programmatic relationship to, the original string.
-func (t *Tokenizer) Tokenize(s string) string {
+func (t MongoTokenizer) Tokenize(s string) string {
 	log.Println("Tokenize:", s)
 	var token string
 	col := t.collection()
@@ -130,20 +148,7 @@ func (t *Tokenizer) Tokenize(s string) string {
 	return token
 }
 
-// Fetches the token for string s from the database.
-func (t *Tokenizer) fetchToken(s string) (string, error) {
-	log.Println("fetchToken:", s)
-	var token string
-	col := t.collection()
-	result := TokenRecord{}
-	err := col.Find(bson.M{"original": s}).One(&result)
-	if err == nil {
-		token = result.Token
-	}
-	return token, err
-}
-
-func (t *Tokenizer) Detokenize(s string) (string, error) {
+func (t MongoTokenizer) Detokenize(s string) (string, error) {
 	log.Println("Detokenize:", s)
 	log.Println("  Token:      " + s)
 	var orig string
@@ -165,7 +170,7 @@ func (t *Tokenizer) Detokenize(s string) (string, error) {
 	return orig, err
 }
 
-func NewTokenizer(db *mgo.Database) Tokenizer {
+func NewMongoTokenizer(db *mgo.Database) Tokenizer {
 	//
 	// Setup database.  If DB is already setup, this is a noop.
 	//
@@ -185,7 +190,7 @@ func NewTokenizer(db *mgo.Database) Tokenizer {
 	//
 	// Initialize tokenizer
 	//
-	t := Tokenizer{
+	t := MongoTokenizer{
 		db: db,
 	}
 	return t
