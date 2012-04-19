@@ -34,6 +34,9 @@ import (
 	"io"
 	"log"
 	"tokenizer"
+	"fmt"
+	"code.google.com/p/goweb/goweb"
+//"github.com/jmcvetta/gokenizer/src/tokenizer"
 )
 
 // Maybe these should be more similar to HTTP response codes.
@@ -154,4 +157,41 @@ func WsDetokenize(t tokenizer.Tokenizer) wsHandler {
 			enc.Encode(response)
 		}
 	}
+}
+
+// The BaseApiController provides boilerplate methods required to 
+// fulfill RestController interface.
+type BaseApiController struct {
+}
+
+func (cr *BaseApiController) Create(cx *goweb.Context) {
+	cx.RespondWithNotImplemented()
+}
+func (cr *BaseApiController) Delete(id string, cx *goweb.Context) {
+	cx.RespondWithNotImplemented()
+}
+func (cr *BaseApiController) DeleteMany(cx *goweb.Context) {
+	cx.RespondWithNotImplemented()
+}
+func (cr *BaseApiController) Read(id string, cx *goweb.Context) {
+	cx.RespondWithNotImplemented()
+}
+func (cr *BaseApiController) ReadMany(cx *goweb.Context) {
+	cx.RespondWithNotImplemented()
+}
+func (cr *BaseApiController) Update(id string, cx *goweb.Context) {
+	cx.RespondWithNotImplemented()
+}
+func (cr *BaseApiController) UpdateMany(cx *goweb.Context) {
+	cx.RespondWithNotImplemented()
+}
+
+type RestTokenize struct {
+	BaseApiController //
+	t tokenizer.Tokenizer
+}
+
+func (ra *RestTokenize) Read(s string, cx *goweb.Context) {
+	token := ra.t.Tokenize(s)
+	fmt.Fprintf(cx.ResponseWriter, "%s", token)
 }
