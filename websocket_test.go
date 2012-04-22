@@ -25,7 +25,7 @@ func getWebsocket(t *testing.T) *websocket.Conn {
 	return ws
 }
 
-func runServer() {
+func runServer(t *testing.T) {
 	//
 	// Use a fake tokenizer since we are only interested in testing the API.
 	//
@@ -39,7 +39,7 @@ func runServer() {
 	http.Handle("/v1/detokenize", websocket.Handler(detok))
 	err := http.ListenAndServe(":3500", nil)
 	if err != nil {
-		log.Fatalln("ListenAndServe: " + err.Error())
+		t.Fatal("ListenAndServe: " + err.Error())
 	}
 }
 
@@ -63,7 +63,7 @@ func TestDetokenizeApi(t *testing.T) {
 
 // Tests tokenization 
 func TestWsTokenize(t *testing.T) {
-	go runServer()
+	go runServer(t)
 	var err error
 	//
 	// Prepare some random data
