@@ -1,5 +1,5 @@
 /*
-                                   Gokenizer
+                                  tokenizerd
                                A Data Tokenizer
 
 
@@ -8,17 +8,17 @@
 @license: GPL v3 - http://www.gnu.org/copyleft/gpl.html
 
 ********************************************************************************
-Gokenizer is free software: you can redistribute it and/or modify it under the
+Tokenizerd is free software: you can redistribute it and/or modify it under the
 terms of the GNU General Public License as published by the Free Software
 Foundation, either version 3 of the License, or (at your option) any later
 version.
 
-Gokenizer is distributed in the hope that it will be useful, but WITHOUT ANY
+Tokenizerd is distributed in the hope that it will be useful, but WITHOUT ANY
 WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A
 PARTICULAR PURPOSE.  See the GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License along with
-Gokenizer.  If not, see <http://www.gnu.org/licenses/>.
+Tokenizerd.  If not, see <http://www.gnu.org/licenses/>.
 ********************************************************************************
 
 */
@@ -26,13 +26,12 @@ Gokenizer.  If not, see <http://www.gnu.org/licenses/>.
 package main
 
 import (
-	"api"
 	"code.google.com/p/go.net/websocket"
 	"flag"
 	"launchpad.net/mgo"
 	"log"
 	"net/http"
-	"tokenizer"
+	"github.com/jmcvetta/tokenizer"
 )
 
 func main() {
@@ -56,8 +55,8 @@ func main() {
 	// Initialize tokenizer
 	//
 	t := tokenizer.NewMongoTokenizer(db)
-	tok := api.WsTokenize(t)
-	detok := api.WsDetokenize(t)
+	tok := WsTokenize(t)
+	detok := WsDetokenize(t)
 	//
 	// Start websocket listener
 	//

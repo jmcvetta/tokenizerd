@@ -1,8 +1,6 @@
 /*
-                                   Gokenizer
-                                  Test Suite
-
-NOTE: Gokenizer application must be running in order to run tests.
+                                  tokenizerd
+                               A Data Tokenizer
 
 
 @author: Jason McVetta <jason.mcvetta@gmail.com>
@@ -10,24 +8,22 @@ NOTE: Gokenizer application must be running in order to run tests.
 @license: GPL v3 - http://www.gnu.org/copyleft/gpl.html
 
 ********************************************************************************
-This file is part of Gokenizer.
-
-Gokenizer is free software: you can redistribute it and/or modify it under the
+Tokenizerd is free software: you can redistribute it and/or modify it under the
 terms of the GNU General Public License as published by the Free Software
 Foundation, either version 3 of the License, or (at your option) any later
 version.
 
-Gokenizer is distributed in the hope that it will be useful, but WITHOUT ANY
+Tokenizerd is distributed in the hope that it will be useful, but WITHOUT ANY
 WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A
 PARTICULAR PURPOSE.  See the GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License along with
-Gokenizer.  If not, see <http://www.gnu.org/licenses/>.
+Tokenizerd.  If not, see <http://www.gnu.org/licenses/>.
 ********************************************************************************
 
 */
 
-package api
+package main
 
 import (
 	"code.google.com/p/go.net/websocket"
@@ -39,15 +35,6 @@ import (
 	"testing"
 )
 
-var tokenizeReq = `
-{
-    "ReqId": "an arbitrary string identifying this request",
-    "Data": {
-        "fieldname1": "fieldvalue1",
-        "field name 2": "field  value 2"
-    }
-}
-`
 
 func getWebsocket(t *testing.T) *websocket.Conn {
 	origin := "http://localhost/"

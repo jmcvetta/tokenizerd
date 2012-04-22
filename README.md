@@ -1,54 +1,54 @@
-# Gokenizer
+# tokenizerd - A data tokenization server
 
-Gokenizer presents a websocket API for tokenizing and detokenizing arbitrary
+tokenizerd presents a websocket API for tokenizing and detokenizing arbitrary
 data, represented as JSON key/value pairs.
 
 
-## Installation
+# Installation
 
-### MongoDB
+## MongoDB
 
-Gokenizer uses MongoDB as a datastore.  Installation instructions for MongoDB
+tokenizerd uses MongoDB as a datastore.  Installation instructions for MongoDB
 can be [found here](http://www.mongodb.org/display/DOCS/Quickstart).
 
-Currently Gokenizer connects to MongoDB with no security.  This will be
+Currently tokenizerd connects to MongoDB with no security.  This will be
 improved in a future version.
 
-### Go Language
+## Go Language
 
 A working installation of [Go](http://golang.org) version 1 is required to
-compile Gokenizer.  See the Go [Getting Started](http://golang.org/doc/install)
+compile tokenizerd.  See the Go [Getting Started](http://golang.org/doc/install)
 page for complete instructions.
 
-### Gokenizer
+# tokenizerd
 
 	cd $YOUR_WORKSPACE
-	git clone git://github.com/jmcvetta/gokenizer.git
-	cd gokenizer
+	git clone git://github.com/jmcvetta/tokenizerd.git
+	cd tokenizerd
 	# "go install" may require superuser permissions, depending on how Go
 	# is installed on your system.
-	go install gokenizer.go 
+	go install tokenizerd.go 
 
 
-## Usage
+# Usage
 
-### Run Gokenizer
+## Run tokenizerd
 
-By default Gokenizer connects to MongoDB on localhost over the default port,
+By default tokenizerd connects to MongoDB on localhost over the default port,
 and listens for websocket connections on ws://localhost:3000.  These can be
 changed with command line flags:
 
-	$ ./gokenizer -help
-	Usage of ./gokenizer:
+	$ ./tokenizerd -help
+	Usage of ./tokenizerd:
 	  -mongo="localhost": URL of MongoDB server
 	  -url="localhost:3000": Host/port on which to run websocket listener
 
-### Connect
+## Connect
 
-Connect to Gokenizer with a websocket client.  You can use [Echo
+Connect to tokenizerd with a websocket client.  You can use [Echo
 Test](http://websocket.org/echo.html) to experiment.
 
-### Tokenize
+## Tokenize
 
 Connect to the websocket:
 
@@ -76,7 +76,7 @@ Response:
 		}
 	}
 
-### Detokenize
+## Detokenize
 
 Connect to the websocket:
 
@@ -117,3 +117,8 @@ Response:
 			}
 		}
 	}
+
+
+# License
+
+Tokenizerd is Free Software, released under the terms of the GPL v3.
