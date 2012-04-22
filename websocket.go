@@ -1,35 +1,14 @@
-/*
-                                  tokenizerd
-                               A Data Tokenizer
+// Copyright 2012 Jason McVetta.  This is free software, released under the 
+// terms of the GNU Public License version 3.
 
-
-@author: Jason McVetta <jason.mcvetta@gmail.com>
-@copyright: (c) 2012 Jason McVetta
-@license: GPL v3 - http://www.gnu.org/copyleft/gpl.html
-
-********************************************************************************
-Tokenizerd is free software: you can redistribute it and/or modify it under the
-terms of the GNU General Public License as published by the Free Software
-Foundation, either version 3 of the License, or (at your option) any later
-version.
-
-Tokenizerd is distributed in the hope that it will be useful, but WITHOUT ANY
-WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A
-PARTICULAR PURPOSE.  See the GNU General Public License for more details.
-
-You should have received a copy of the GNU General Public License along with
-Tokenizerd.  If not, see <http://www.gnu.org/licenses/>.
-********************************************************************************
-
-*/
 package main
 
 import (
 	"code.google.com/p/go.net/websocket"
 	"encoding/json"
+	"github.com/jmcvetta/tokenizer"
 	"io"
 	"log"
-	"github.com/jmcvetta/tokenizer"
 )
 
 // Maybe these should be more similar to HTTP response codes.

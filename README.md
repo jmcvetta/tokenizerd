@@ -4,32 +4,6 @@ tokenizerd presents a websocket API for tokenizing and detokenizing arbitrary
 data, represented as JSON key/value pairs.
 
 
-# Installation
-
-## MongoDB
-
-tokenizerd uses MongoDB as a datastore.  Installation instructions for MongoDB
-can be [found here](http://www.mongodb.org/display/DOCS/Quickstart).
-
-Currently tokenizerd connects to MongoDB with no security.  This will be
-improved in a future version.
-
-## Go Language
-
-A working installation of [Go](http://golang.org) version 1 is required to
-compile tokenizerd.  See the Go [Getting Started](http://golang.org/doc/install)
-page for complete instructions.
-
-# tokenizerd
-
-	cd $YOUR_WORKSPACE
-	git clone git://github.com/jmcvetta/tokenizerd.git
-	cd tokenizerd
-	# "go install" may require superuser permissions, depending on how Go
-	# is installed on your system.
-	go install tokenizerd.go 
-
-
 # Usage
 
 ## Run tokenizerd
@@ -121,4 +95,5 @@ Response:
 
 # License
 
-Tokenizerd is Free Software, released under the terms of the GPL v3.
+Tokenizerd is Free Software, released under the terms of the
+[GPL](http://www.gnu.org/copyleft/gpl.html)
