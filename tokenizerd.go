@@ -39,8 +39,8 @@ func main() {
 	// Start websocket listener
 	//
 	log.Println("Starting websocket listener on ", *listenUrl)
-	http.Handle("/v1/tokenize", websocket.Handler(tok))
-	http.Handle("/v1/detokenize", websocket.Handler(detok))
+	http.Handle("/v1/ws/tokenize", websocket.Handler(tok))
+	http.Handle("/v1/ws/detokenize", websocket.Handler(detok))
 	// listenUrl := "heliotropi.cc:3000"
 	err = http.ListenAndServe(*listenUrl, nil)
 	if err != nil {
