@@ -1,42 +1,14 @@
-/*
-                                   Gokenizer
-                               A Data Tokenizer
-API
+// Copyright 2012 Jason McVetta.  This is Free Software, released under the 
+// terms of the GNU Public License version 3.
 
-
-@author: Jason McVetta <jason.mcvetta@gmail.com>
-@copyright: (c) 2012 Jason McVetta
-@license: GPL v3 - http://www.gnu.org/copyleft/gpl.html
-
-********************************************************************************
-This file is part of Gokenizer.
-
-Gokenizer is free software: you can redistribute it and/or modify it under the
-terms of the GNU General Public License as published by the Free Software
-Foundation, either version 3 of the License, or (at your option) any later
-version.
-
-Gokenizer is distributed in the hope that it will be useful, but WITHOUT ANY
-WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A
-PARTICULAR PURPOSE.  See the GNU General Public License for more details.
-
-You should have received a copy of the GNU General Public License along with
-Gokenizer.  If not, see <http://www.gnu.org/licenses/>.
-********************************************************************************
-
-*/
-
-package api
+package main
 
 import (
 	"code.google.com/p/go.net/websocket"
 	"encoding/json"
+	"github.com/jmcvetta/tokenizer"
 	"io"
 	"log"
-	"tokenizer"
-	"fmt"
-	"code.google.com/p/goweb/goweb"
-//"github.com/jmcvetta/gokenizer/src/tokenizer"
 )
 
 // Maybe these should be more similar to HTTP response codes.
@@ -87,9 +59,10 @@ func WsTokenize(t tokenizer.Tokenizer) wsHandler {
 		dec := json.NewDecoder(ws)
 		enc := json.NewEncoder(ws)
 		for {
+			var err error
 			var request JsonTokenizeRequest
 			// Read one request from the socket and attempt to decode
-			switch err := dec.Decode(&request); true {
+			switch err = dec.Decode(&request); true {
 			case err == io.EOF:
 				log.Println("Websocket disconnecting")
 				return
@@ -102,7 +75,11 @@ func WsTokenize(t tokenizer.Tokenizer) wsHandler {
 			}
 			data := make(map[string]string)
 			for fieldname, text := range request.Data {
-				data[fieldname] = t.Tokenize(text)
+				data[fieldname], err = t.Tokenize(text)
+				if err != nil {
+					// TODO: Do something nicer with this error?
+					log.Panic(err)
+				}
 			}
 			response := TokenizeReponse{
 				ReqId:  request.ReqId,
