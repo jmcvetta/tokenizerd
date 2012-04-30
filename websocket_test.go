@@ -47,8 +47,8 @@ func runServer(t *testing.T) {
 // always identical, so no storage or logic is required.
 type FakeTokenizer struct{}
 
-func (f FakeTokenizer) Tokenize(s string) string {
-	return s
+func (f FakeTokenizer) Tokenize(s string) (string, error) {
+	return s, nil
 }
 
 func (f FakeTokenizer) Detokenize(s string) (string, error) {

@@ -59,9 +59,10 @@ func WsTokenize(t tokenizer.Tokenizer) wsHandler {
 		dec := json.NewDecoder(ws)
 		enc := json.NewEncoder(ws)
 		for {
+			var err error
 			var request JsonTokenizeRequest
 			// Read one request from the socket and attempt to decode
-			switch err := dec.Decode(&request); true {
+			switch err = dec.Decode(&request); true {
 			case err == io.EOF:
 				log.Println("Websocket disconnecting")
 				return
@@ -74,7 +75,11 @@ func WsTokenize(t tokenizer.Tokenizer) wsHandler {
 			}
 			data := make(map[string]string)
 			for fieldname, text := range request.Data {
-				data[fieldname] = t.Tokenize(text)
+				data[fieldname], err = t.Tokenize(text)
+				if err != nil {
+					// TODO: Do something nicer with this error?
+					log.Panic(err)
+				}
 			}
 			response := TokenizeReponse{
 				ReqId:  request.ReqId,
