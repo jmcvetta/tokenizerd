@@ -28,7 +28,7 @@ func main() {
 	if err != nil {
 		log.Fatalln(err)
 	}
-	db := session.DB("gokenizer")
+	db := session.DB("tokenizer")
 	//
 	// Initialize tokenizer
 	//
