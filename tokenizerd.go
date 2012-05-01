@@ -28,20 +28,20 @@ func main() {
 	if err != nil {
 		log.Fatalln(err)
 	}
-	db := session.DB("gokenizer")
-	//
-	// Initialize tokenizer
-	//
+	db := session.DB("tokenizer")
+	// Get a tokenizer
 	t := tokenizer.NewMongoTokenizer(db)
+	//
+	// Register websocket handlers
+	//
 	tok := WsTokenize(t)
 	detok := WsDetokenize(t)
-	//
-	// Start websocket listener
-	//
-	log.Println("Starting websocket listener on ", *listenUrl)
 	http.Handle("/v1/ws/tokenize", websocket.Handler(tok))
 	http.Handle("/v1/ws/detokenize", websocket.Handler(detok))
-	// listenUrl := "heliotropi.cc:3000"
+	//
+	// Start listener
+	//
+	log.Println("Listening on ", *listenUrl)
 	err = http.ListenAndServe(*listenUrl, nil)
 	if err != nil {
 		log.Fatalln("ListenAndServe: " + err.Error())
