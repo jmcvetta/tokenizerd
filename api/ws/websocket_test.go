@@ -1,7 +1,7 @@
 // Copyright 2012 Jason McVetta.  This is Free Software, released under the 
 // terms of the GNU Public License version 3.
 
-package main
+package ws
 
 import (
 	"code.google.com/p/go.net/websocket"
@@ -30,8 +30,8 @@ func runServer(t *testing.T) {
 	// Use a fake tokenizer since we are only interested in testing the API.
 	//
 	fake := FakeTokenizer{}
-	tok := WsTokenize(fake)
-	detok := WsDetokenize(fake)
+	tok := Tokenize(fake)
+	detok := Detokenize(fake)
 	//
 	// Start websocket listener
 	//
@@ -55,14 +55,8 @@ func (f FakeTokenizer) Detokenize(s string) (string, error) {
 	return s, nil
 }
 
-func TestTokenizeApi(t *testing.T) {
-}
-
-func TestDetokenizeApi(t *testing.T) {
-}
-
 // Tests tokenization 
-func TestWsTokenize(t *testing.T) {
+func TestTokenize(t *testing.T) {
 	go runServer(t)
 	var err error
 	//

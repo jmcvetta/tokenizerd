@@ -7,6 +7,8 @@ import (
 	"code.google.com/p/go.net/websocket"
 	"flag"
 	"github.com/jmcvetta/tokenizer"
+	// "github.com/jmcvetta/tokenizerd/api/restful"
+	"github.com/jmcvetta/tokenizerd/api/ws"
 	"launchpad.net/mgo"
 	"log"
 	"net/http"
@@ -34,8 +36,9 @@ func main() {
 	//
 	// Register websocket handlers
 	//
-	tok := WsTokenize(t)
-	detok := WsDetokenize(t)
+	//tok := WsTokenize(t)
+	tok := ws.Tokenize(t)
+	detok := ws.Detokenize(t)
 	http.Handle("/v1/ws/tokenize", websocket.Handler(tok))
 	http.Handle("/v1/ws/detokenize", websocket.Handler(detok))
 	//

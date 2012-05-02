@@ -1,7 +1,7 @@
 // Copyright 2012 Jason McVetta.  This is Free Software, released under the 
 // terms of the GNU Public License version 3.
 
-package main
+package ws
 
 import (
 	"code.google.com/p/go.net/websocket"
@@ -50,7 +50,7 @@ type DetokenizeReponse struct {
 
 type wsHandler func(ws *websocket.Conn)
 
-func WsTokenize(t tokenizer.Tokenizer) wsHandler {
+func Tokenize(t tokenizer.Tokenizer) wsHandler {
 	return func(ws *websocket.Conn) {
 		log.Println("New websocket connection")
 		log.Println("    Location:  ", ws.Config().Location)
@@ -92,7 +92,7 @@ func WsTokenize(t tokenizer.Tokenizer) wsHandler {
 }
 
 // A websocket handler for detokenization
-func WsDetokenize(t tokenizer.Tokenizer) wsHandler {
+func Detokenize(t tokenizer.Tokenizer) wsHandler {
 	return func(ws *websocket.Conn) {
 		dec := json.NewDecoder(ws)
 		enc := json.NewEncoder(ws)
@@ -134,41 +134,4 @@ func WsDetokenize(t tokenizer.Tokenizer) wsHandler {
 			enc.Encode(response)
 		}
 	}
-}
-
-// The BaseApiController provides boilerplate methods required to 
-// fulfill RestController interface.
-type BaseApiController struct {
-}
-
-func (cr *BaseApiController) Create(cx *goweb.Context) {
-	cx.RespondWithNotImplemented()
-}
-func (cr *BaseApiController) Delete(id string, cx *goweb.Context) {
-	cx.RespondWithNotImplemented()
-}
-func (cr *BaseApiController) DeleteMany(cx *goweb.Context) {
-	cx.RespondWithNotImplemented()
-}
-func (cr *BaseApiController) Read(id string, cx *goweb.Context) {
-	cx.RespondWithNotImplemented()
-}
-func (cr *BaseApiController) ReadMany(cx *goweb.Context) {
-	cx.RespondWithNotImplemented()
-}
-func (cr *BaseApiController) Update(id string, cx *goweb.Context) {
-	cx.RespondWithNotImplemented()
-}
-func (cr *BaseApiController) UpdateMany(cx *goweb.Context) {
-	cx.RespondWithNotImplemented()
-}
-
-type RestTokenize struct {
-	BaseApiController //
-	t tokenizer.Tokenizer
-}
-
-func (ra *RestTokenize) Read(s string, cx *goweb.Context) {
-	token := ra.t.Tokenize(s)
-	fmt.Fprintf(cx.ResponseWriter, "%s", token)
 }
