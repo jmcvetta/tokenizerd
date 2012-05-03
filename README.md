@@ -1,7 +1,12 @@
 # tokenizerd - A data tokenization server
 
-tokenizerd presents a websocket API for tokenizing and detokenizing arbitrary
-data, represented as JSON key/value pairs.
+Tokenizerd presents REST and JSON over websocket APIs for tokenizing and
+detokenizing arbitrary strings.  A token uniquely represents, but is not
+programmatically derived from, the original string.
+
+See Wikipedia's page on
+[Tokenization](http://en.wikipedia.org/wiki/Tokenization_(data_security)) for
+background on why one might want to tokenize some data.
 
 
 # Usage
@@ -17,16 +22,34 @@ changed with command line flags:
 	  -mongo="localhost": URL of MongoDB server
 	  -url="localhost:3000": Host/port on which to run websocket listener
 
-## Connect
+
+## REST API
+
+### Tokenize
+
+	http://localhost:3000/v1/rest/tokenize/{string}
+
+Returns status code 200 and a token string, or status code 500 and an error
+message.
+
+### Detokenize
+
+	http://localhost:3000/v1/rest/detokenize/{string}
+
+Returns status code 200 and the original string; status code 404, indicating no
+such token exists in the database; or status code 500 and an error message.
+
+
+## JSON over Websocket API
 
 Connect to tokenizerd with a websocket client.  You can use [Echo
 Test](http://websocket.org/echo.html) to experiment.
 
-## Tokenize
+### Tokenize
 
 Connect to the websocket:
 
-	ws://localhost:3000/v1/tokenize
+	ws://localhost:3000/v1/ws/tokenize
 
 Issue a JSON request:
 
@@ -50,11 +73,11 @@ Response:
 		}
 	}
 
-## Detokenize
+### Detokenize
 
 Connect to the websocket:
 
-	ws://localhost:3000/v1/detokenize
+	ws://localhost:3000/v1/ws/detokenize
 
 Issue a JSON request:
 
