@@ -4,7 +4,6 @@ import (
 	"code.google.com/p/gorilla/mux"
 	"fmt"
 	"github.com/jmcvetta/tokenizer"
-	"html"
 	"log"
 	"net/http"
 )
@@ -13,12 +12,11 @@ func tokenizeHandler(t tokenizer.Tokenizer) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		s := mux.Vars(r)["s"]
 		log.Println("RESTful Tokenize:", s)
-		s = html.UnescapeString(s)
 		token, err := t.Tokenize(s)
 		if err != nil {
 			http.Error(w, err.Error(), 500)
 		}
-		fmt.Fprint(w, html.EscapeString(token))
+		fmt.Fprint(w, token)
 	}
 }
 
@@ -26,7 +24,6 @@ func detokenizeHandler(t tokenizer.Tokenizer) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		s := mux.Vars(r)["s"]
 		log.Println("RESTful Detokenize:", s)
-		s = html.UnescapeString(s)
 		orig, err := t.Detokenize(s)
 		switch {
 		case err == tokenizer.TokenNotFound:
@@ -34,7 +31,7 @@ func detokenizeHandler(t tokenizer.Tokenizer) http.HandlerFunc {
 		case err != nil:
 			http.Error(w, err.Error(), 500)
 		}
-		fmt.Fprint(w, html.EscapeString(orig))
+		fmt.Fprint(w, orig)
 	}
 }
 
