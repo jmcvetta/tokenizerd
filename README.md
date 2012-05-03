@@ -5,7 +5,7 @@ detokenizing arbitrary strings.  A token uniquely represents, but is not
 programmatically derived from, the original string.
 
 See Wikipedia's page on
-[Tokenization](http://en.wikipedia.org/wiki/Tokenization_(data_security)) for
+[Tokenization](http://en.wikipedia.org/wiki/Tokenization_(data_security\)) for
 background on why one might want to tokenize some data.
 
 
