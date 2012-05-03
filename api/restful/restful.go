@@ -9,7 +9,7 @@ import (
 	"net/http"
 )
 
-func TokenizeHandler(t tokenizer.Tokenizer) http.HandlerFunc {
+func tokenizeHandler(t tokenizer.Tokenizer) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		s := mux.Vars(r)["s"]
 		log.Println("RESTful Tokenize:", s)
@@ -22,7 +22,7 @@ func TokenizeHandler(t tokenizer.Tokenizer) http.HandlerFunc {
 	}
 }
 
-func DetokenizeHandler(t tokenizer.Tokenizer) http.HandlerFunc {
+func detokenizeHandler(t tokenizer.Tokenizer) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		s := mux.Vars(r)["s"]
 		log.Println("RESTful Detokenize:", s)
@@ -41,7 +41,7 @@ func DetokenizeHandler(t tokenizer.Tokenizer) http.HandlerFunc {
 func Router(t tokenizer.Tokenizer) *mux.Router {
 	r := mux.NewRouter()
 	s := r.PathPrefix("/v1/rest/").Subrouter()
-	s.HandleFunc("/tokenize/{s}", TokenizeHandler(t))
-	s.HandleFunc("/detokenize/{s}", DetokenizeHandler(t))
+	s.HandleFunc("/tokenize/{s}", tokenizeHandler(t))
+	s.HandleFunc("/detokenize/{s}", detokenizeHandler(t))
 	return r
 }
