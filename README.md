@@ -8,6 +8,11 @@ See Wikipedia's page on
 [Tokenization](http://en.wikipedia.org/wiki/Tokenization_(data_security\)) for
 background on why one might want to tokenize some data.
 
+# Security Note
+
+Tokenizerd does not currently implement any sort of access control or transport
+encryption. Use it at your own risk!
+
 
 # Usage
 
