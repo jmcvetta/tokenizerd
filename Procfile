@@ -1,1 +1,1 @@
-web: tokenizerd -url localhost:$PORT -mongo $MONGOLAB_URI
+web: tokenizerd -url 0.0.0.0:$PORT -mongo $MONGOLAB_URI
