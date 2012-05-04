@@ -1,6 +1,6 @@
 # tokenizerd - A data tokenization server
 
-Tokenizerd presents REST and JSON over websocket APIs for tokenizing and
+Tokenizerd presents REST and JSON-over-websocket APIs for tokenizing and
 detokenizing arbitrary strings.  A token uniquely represents, but is not
 programmatically derived from, the original string.
 
