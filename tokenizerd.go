@@ -4,11 +4,12 @@
 package main
 
 import (
-	// "code.google.com/p/go.net/websocket"
+	"code.google.com/p/go.net/websocket"
 	"flag"
+	"github.com/bmizerany/pat"
 	"github.com/jmcvetta/tokenizer"
-	"github.com/jmcvetta/tokenizerd/api/restful"
-	// "github.com/jmcvetta/tokenizerd/api/ws"
+	"github.com/jmcvetta/tokenizerd/api/rest"
+	"github.com/jmcvetta/tokenizerd/api/ws"
 	"launchpad.net/mgo"
 	"log"
 	"net/http"
@@ -23,7 +24,7 @@ func main() {
 	mongoUrl := flag.String("mongo", "localhost", "URL of MongoDB server")
 	flag.Parse()
 	//
-	// Setup database connection
+	// Setup MongoDB connection
 	//
 	log.Println("Connecting to MongoDB on", *mongoUrl)
 	session, err := mgo.Dial(*mongoUrl)
@@ -31,23 +32,23 @@ func main() {
 		log.Fatalln(err)
 	}
 	db := session.DB("tokenizer")
-	// Get a tokenizer
+	//
+	// Initialize Tokenizer
+	//
 	t := tokenizer.NewMongoTokenizer(db)
 	//
-	// Register websocket handlers
+	// Register URLs
 	//
-	// tok := ws.Tokenize(t)
-	// detok := ws.Detokenize(t)
-	// http.Handle("/v1/ws/tokenize", websocket.Handler(tok))
-	// http.Handle("/v1/ws/detokenize", websocket.Handler(detok))
+	mux := pat.New()
+	mux.Get("/v1/rest/tokenize/:string", rest.TokenizeHandler(t))
+	mux.Get("/v1/rest/detokenize/:token", rest.DetokenizeHandler(t))
+	mux.Get("/v1/ws/tokenize", websocket.Handler(ws.Tokenize(t)))
+	mux.Get("/v1/ws/detokenize", websocket.Handler(ws.Detokenize(t)))
+	http.Handle("/", mux)
 	//
-	// RESTful Handler
+	// Start HTTP server
 	//
-	http.Handle("/", restful.Router(t))
-	//
-	// Start listener
-	//
-	log.Println("Listening on ", *listenUrl)
+	log.Println("Starting HTTP server on", *listenUrl)
 	err = http.ListenAndServe(*listenUrl, nil)
 	if err != nil {
 		log.Fatalln("ListenAndServe: " + err.Error())
