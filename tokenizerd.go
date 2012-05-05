@@ -10,10 +10,39 @@ import (
 	"github.com/jmcvetta/tokenizer"
 	"github.com/jmcvetta/tokenizerd/api/rest"
 	"github.com/jmcvetta/tokenizerd/api/ws"
+	"github.com/russross/blackfriday"
 	"launchpad.net/mgo"
 	"log"
 	"net/http"
 )
+
+const (
+	homeMarkdown = `# Tokenizerd
+	
+A data tokenization server
+
+## REST API
+
+### Tokenize
+
+	/v1/rest/tokenize/{string}
+
+Returns status code 200 and a token string, or status code 500 and an error
+message.
+
+### Detokenize
+
+	/v1/rest/detokenize/{token}
+
+Returns status code 200 and the original string; status code 404, indicating no
+such token exists in the database; or status code 500 and an error message.
+`
+)
+
+func HomePageHandler(w http.ResponseWriter, req *http.Request) {
+	output := blackfriday.MarkdownCommon([]byte(homeMarkdown))
+	w.Write(output)
+}
 
 func main() {
 	log.SetFlags(log.Ltime | log.Lshortfile)
@@ -44,6 +73,7 @@ func main() {
 	mux.Get("/v1/rest/detokenize/:token", rest.DetokenizeHandler(t))
 	mux.Get("/v1/ws/tokenize", websocket.Handler(ws.Tokenize(t)))
 	mux.Get("/v1/ws/detokenize", websocket.Handler(ws.Detokenize(t)))
+	mux.Get("/", http.HandlerFunc(HomePageHandler))
 	http.Handle("/", mux)
 	//
 	// Start HTTP server
