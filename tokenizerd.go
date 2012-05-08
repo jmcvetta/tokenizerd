@@ -56,10 +56,10 @@ func main() {
 	// Extract DB name from DB URL, if present
 	dbName := "tokenizer" // If no DB name specified, use "tokenizer"
 	switch _, auth, _, err := mgourl.ParseURL(*mongoUrl); true {
-		case err != nil:
-			log.Fatal("Could not parse MongoDB URL:", err)
-		case auth.Db != "":
-			dbName = auth.Db
+	case err != nil:
+		log.Fatal("Could not parse MongoDB URL:", err)
+	case auth.Db != "":
+		dbName = auth.Db
 	}
 	//
 	// Setup MongoDB connection
