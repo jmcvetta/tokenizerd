@@ -7,6 +7,7 @@ import (
 	"code.google.com/p/go.net/websocket"
 	"flag"
 	"github.com/bmizerany/pat"
+	"github.com/jmcvetta/mgourl"
 	"github.com/jmcvetta/tokenizer"
 	"github.com/jmcvetta/tokenizerd/api/rest"
 	"github.com/jmcvetta/tokenizerd/api/ws"
@@ -52,6 +53,14 @@ func main() {
 	listenUrl := flag.String("url", "localhost:3000", "Host/port on which to run websocket listener")
 	mongoUrl := flag.String("mongo", "localhost", "URL of MongoDB server")
 	flag.Parse()
+	// Extract DB name from DB URL, if present
+	dbName := "tokenizer" // If no DB name specified, use "tokenizer"
+	switch _, auth, _, err := mgourl.ParseURL(*mongoUrl); true {
+		case err != nil:
+			log.Fatal("Could not parse MongoDB URL:", err)
+		case auth.Db != "":
+			dbName = auth.Db
+	}
 	//
 	// Setup MongoDB connection
 	//
@@ -60,7 +69,7 @@ func main() {
 	if err != nil {
 		log.Fatalln(err)
 	}
-	db := session.DB("tokenizer")
+	db := session.DB(dbName)
 	//
 	// Initialize Tokenizer
 	//
